@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 import {
     Menu,
     Icon,
@@ -7,21 +7,22 @@ import {
     Input,
     Button,
     Label,
-} from "semantic-ui-react";
-import { connect } from "react-redux";
-import { setCurrentChannel, setPrivateChannel } from "../../actions";
-import { Firebase } from "../../config";
+} from 'semantic-ui-react';
+import { connect } from 'react-redux';
+import { setCurrentChannel, setPrivateChannel } from '../../actions';
+import { Firebase } from '../../config';
 
 class Channels extends Component {
     state = {
-        activeChannel: "",
+        activeChannel: '',
         user: this.props.currentUser,
         channel: null,
         channels: [],
-        channelName: "",
-        channelDetails: "",
-        channelsRef: Firebase.database().ref("channels"),
-        messagesRef: Firebase.database().ref("messages"),
+        channelName: '',
+        channelDetails: '',
+        channelsRef: Firebase.database().ref('channels'),
+        messagesRef: Firebase.database().ref('messages'),
+        typingRef: Firebase.database().ref('typing'),
         notifications: [],
         modal: false,
         firstLoad: true,
@@ -31,13 +32,20 @@ class Channels extends Component {
         this.addListeners();
     }
 
-    componentWillMount() {
+    componentWillUnmount() {
         this.removeListeners();
     }
 
+    removeListeners = () => {
+        this.state.channelsRef.off();
+        this.state.channels.forEach((channel) => {
+            this.state.messagesRef.child(channel.id).off();
+        });
+    };
+
     addListeners = () => {
         let loadedChannels = [];
-        this.state.channelsRef.on("child_added", (snap) => {
+        this.state.channelsRef.on('child_added', (snap) => {
             loadedChannels.push(snap.val());
             this.setState({ channels: loadedChannels }, () =>
                 this.setFirstChannel()
@@ -47,7 +55,7 @@ class Channels extends Component {
     };
 
     addNotificationListener = (channelId) => {
-        this.state.messagesRef.child(channelId).on("value", (snap) => {
+        this.state.messagesRef.child(channelId).on('value', (snap) => {
             if (this.state.channel) {
                 this.handleNotifications(
                     channelId,
@@ -89,10 +97,6 @@ class Channels extends Component {
         this.setState({ notifications });
     };
 
-    removeListeners = () => {
-        this.state.channelsRef.off();
-    };
-
     setFirstChannel = () => {
         const firstChannel = this.state.channels[0];
         if (this.state.firstLoad && this.state.channels.length > 0) {
@@ -116,7 +120,7 @@ class Channels extends Component {
             details: channelDetails,
             createdBy: {
                 name: user.displayName,
-                photo: user.photoURL,
+                avatar: user.photoURL,
             },
         };
 
@@ -124,9 +128,9 @@ class Channels extends Component {
             .child(key)
             .update(newChannel)
             .then(() => {
-                this.setState({ channelName: "", channelDetails: "" });
+                this.setState({ channelName: '', channelDetails: '' });
                 this._closeModal();
-                console.log("channel added");
+                console.log('channel added');
             })
             .catch((err) => {
                 console.error(err);
@@ -135,6 +139,10 @@ class Channels extends Component {
 
     changeChannel = (channel) => {
         this.setActiveChannel(channel);
+        this.state.typingRef
+            .child(this.state.channel.id)
+            .child(this.state.user.uid)
+            .remove();
         this.clearNotifications();
         this.props.setCurrentChannel(channel);
         this.props.setPrivateChannel(false);
@@ -217,8 +225,8 @@ class Channels extends Component {
                     <Menu.Item>
                         <span>
                             <Icon name="exchange" /> CHANNELS
-                        </span>{" "}
-                        ({channels.length}){" "}
+                        </span>{' '}
+                        ({channels.length}){' '}
                         <Icon name="add" onClick={this._openModal} />
                     </Menu.Item>
                     {this._displayChannels(channels)}

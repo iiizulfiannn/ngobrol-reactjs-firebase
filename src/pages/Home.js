@@ -1,15 +1,30 @@
-import React from "react";
-import { Grid } from "semantic-ui-react";
-import { connect } from "react-redux";
-import { ColorPanel, Messages, MetaPanel, SidePanel } from "../components";
+import React from 'react';
+import { Grid } from 'semantic-ui-react';
+import { connect } from 'react-redux';
+import { ColorPanel, Messages, MetaPanel, SidePanel } from '../components';
 
-const Home = ({ currentUser, currentChannel, isPrivateChannel }) => {
+const Home = ({
+    currentUser,
+    currentChannel,
+    isPrivateChannel,
+    userPosts,
+    primaryColor,
+    secondaryColor,
+}) => {
     return (
-        <Grid columns="equal" className="app" style={{ background: "#eee" }}>
-            <ColorPanel />
+        <Grid
+            columns="equal"
+            className="app"
+            style={{ background: secondaryColor }}
+        >
+            <ColorPanel
+                key={currentUser && currentUser.name}
+                currentUser={currentUser}
+            />
             <SidePanel
                 key={currentUser && currentUser.uid}
                 currentUser={currentUser}
+                primaryColor={primaryColor}
             />
             <Grid.Column style={{ marginLeft: 320 }}>
                 <Messages
@@ -20,7 +35,12 @@ const Home = ({ currentUser, currentChannel, isPrivateChannel }) => {
                 />
             </Grid.Column>
             <Grid.Column width={4}>
-                <MetaPanel />
+                <MetaPanel
+                    key={currentChannel && currentChannel.name}
+                    isPrivateChannel={isPrivateChannel}
+                    currentChannel={currentChannel}
+                    userPosts={userPosts}
+                />
             </Grid.Column>
         </Grid>
     );
@@ -30,6 +50,9 @@ const mapStateToProps = (state) => ({
     currentUser: state.user.currentUser,
     currentChannel: state.channel.currentChannel,
     isPrivateChannel: state.channel.isPrivateChannel,
+    userPosts: state.channel.userPosts,
+    primaryColor: state.colors.primaryColor,
+    secondaryColor: state.colors.secondaryColor,
 });
 
 export default connect(mapStateToProps)(Home);
