@@ -1,2 +1,1 @@
-#Link
-react-app-ngobrol.firebaseapp.com
+#Link http://react-app-ngobrol.firebaseapp.com
